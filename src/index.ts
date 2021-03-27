@@ -1,5 +1,5 @@
 import * as filecoin_signer from '@zondax/filecoin-signing-tools'
-import blake from 'blakejs'
+import blake2b from 'blake2b'
 import btoa from 'btoa'
 // import * as filecoin_signer_js from '@zondax/filecoin-signing-tools/js'
 const cbor = require('ipld-dag-cbor').util
@@ -174,9 +174,9 @@ const main = async () => {
   const payment_channel_address = 't07361'
   const time_lock_min = '0'
   const time_lock_max = '0'
-  const secret = blake.blake2bHex('secret')
-  const secret_pre_image = blake.blake2bHex(secret) // preimage
-    console.log(secret_pre_image)
+  const secret = Buffer.from('secret')
+  const secret_pre_image = blake2b(new Uint8Array(32).length).update(secret).digest('hex') // preimage
+    
     // console.log(typeof secret_pre_image)
     // return
   const amount = '100000'
