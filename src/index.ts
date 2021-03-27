@@ -1,5 +1,6 @@
 import * as filecoin_signer from '@zondax/filecoin-signing-tools'
-import blake from "blakejs"
+import blake from 'blakejs'
+import btoa from 'btoa'
 // import * as filecoin_signer_js from '@zondax/filecoin-signing-tools/js'
 const cbor = require('ipld-dag-cbor').util
 // const FilecoinRPC = require('@zondax/filecoin-signing-tools/utils')
@@ -173,11 +174,11 @@ const main = async () => {
   const payment_channel_address = 't07361'
   const time_lock_min = '0'
   const time_lock_max = '0'
-  const secret = 'secret'
-  const secret_pre_image = Buffer.from(blake.blake2b(secret)).toString('hex') // preimage
-  
-  console.log(secret_pre_image)
-    
+  const secret = blake.blake2bHex('secret')
+  const secret_pre_image = blake.blake2bHex(secret) // preimage
+    console.log(secret_pre_image)
+    // console.log(typeof secret_pre_image)
+    // return
   const amount = '100000'
   const lane = '0'
   const nonce_voucher = 0
@@ -211,12 +212,12 @@ const main = async () => {
   let redeem_nonce = await filRPC.getNonce(from)
   redeem_nonce = redeem_nonce.result
 
-  // Update Payment Channel Message  
+  // Update Payment Channel Message
   let update_paych_message = filecoin_signer.updatePymtChan(
     payment_channel_address,
     to,
     signedVoucher,
-    Buffer.from(secret).toString('hex'),
+    secret,
     redeem_nonce,
     '0', // gas_limit
     '0', // gas_fee_cap,

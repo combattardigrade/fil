@@ -805,7 +805,7 @@ pub fn update_pymtchan_with_fee(
     pch_address: String,
     from_address: String,
     signed_voucher: String,
-    secret: String,
+    secret: JsValue,
     nonce: u32,
     gas_limit: String,
     gas_fee_cap: String,
@@ -817,6 +817,11 @@ pub fn update_pymtchan_with_fee(
 
     let gl = i64::from_str_radix(&gas_limit, 10)
         .map_err(|e| JsValue::from(format!("Error converting to i64: {}", e)))?;
+
+    let secret = extract_bytes(
+        secret,
+        "secret must be encoded as hexstring, base64 or a buffer",
+    )?;
 
     let pch_transaction = filecoin_signer::update_pymtchan(
         pch_address,
@@ -841,12 +846,16 @@ pub fn update_pymtchan(
     pch_address: String,
     from_address: String,
     signed_voucher: String,
-    secret: String,
+    secret: JsValue,
     nonce: u32,
 ) -> Result<JsValue, JsValue> {
     set_panic_hook();
 
     // TODO: verify if `pch_address` is an actor address. Not needed but good improvement.
+    let secret: Vec<u8> = extract_bytes(
+        secret,
+        "secret must be encoded as hexstring, base64 or a buffer",
+    )?;
 
     let pch_transaction = filecoin_signer::update_pymtchan(
         pch_address,
@@ -886,7 +895,7 @@ pub fn create_voucher(
     payment_channel_address: String,
     time_lock_min: String,
     time_lock_max: String,
-    secret_pre_image: String,
+    secret_pre_image: JsValue,
     amount: String,
     lane: String,
     nonce: u32,
@@ -904,6 +913,11 @@ pub fn create_voucher(
 
     let msh = i64::from_str_radix(&min_settle_height, 10)
         .map_err(|e| JsValue::from(format!("Error converting to i64: {}", e)))?;
+
+    let secret_pre_image = extract_bytes(
+        secret_pre_image,
+        "secret_pre_image must be encoded as hexstring, base64 or a buffer",
+    )?;
 
     let voucher = filecoin_signer::create_voucher(
         payment_channel_address,

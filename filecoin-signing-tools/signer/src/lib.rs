@@ -831,14 +831,13 @@ pub fn update_pymtchan(
     pch_address: String,
     from_address: String,
     signed_voucher: String,
-    secret:String,
+    secret:Vec<u8>,
     nonce: u64,
     gas_limit: i64,
     gas_fee_cap: String,
     gas_premium: String,
 ) -> Result<UnsignedMessageAPI, SignerError> {
     let sv_cbor = base64::decode(signed_voucher)?;
-    let secret = base64::decode(secret)?;
 
     let sv: paych::SignedVoucher = forest_encoding::from_slice(sv_cbor.as_ref())?;
 
@@ -981,7 +980,7 @@ pub fn create_voucher(
     payment_channel_address: String,
     time_lock_min: i64,
     time_lock_max: i64,
-    secret_pre_image: String,
+    secret_pre_image: Vec<u8>,
     amount: String,
     lane: u64,
     nonce: u64,
@@ -996,8 +995,6 @@ pub fn create_voucher(
             ));
         }
     };
-
-    let secret_pre_image = base64::decode(secret_pre_image)?;
 
     let voucher = paych::SignedVoucher {
         channel_addr: pch,
