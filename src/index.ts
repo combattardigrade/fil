@@ -92,11 +92,12 @@ const TOKEN =
 const filRPC = new FilecoinRPC({ url: URL, token: TOKEN })
 
 const privateKeyBase64 = 'YzPHu1i6raDvD4VF1+XjjMHxyuDyd6JvrPK7R1IDVcQ='
+const privateKeyBase64_2 = 'dR8iDhmD/hKuQf/uA0EMG62kgIZJ7Sjx/68piM6WLQ0='
 // const privateKeyBase64 = 'YbDPh1vq3fBClzbiwDt6WjniAdZn8tNcCwcBO2hDwyk'
 const privateKey = Buffer.from(privateKeyBase64, 'base64')
 
 // const recipient = 'f1bzxzmxme33lg5sstuq7hhuphejgwac4wyvw7bjq'
-const recipient = 't137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy'
+const recipient = 't1jg3b7ieqopoyt2i374ls7vleep5tsknc3m6ujyq'
 
 const main = async () => {
   /* Recover address */
@@ -104,6 +105,9 @@ const main = async () => {
 
   let recoveredKey = filecoin_signer.keyRecover(privateKeyBase64, true)
   console.log(recoveredKey.address)
+
+  let recoveredKey_2 = filecoin_signer.keyRecover(privateKeyBase64_2, true)
+  console.log(recoveredKey_2.address)
 
   /* Get nonce */
   console.log('##### GET NONCE #####')
@@ -161,7 +165,7 @@ const main = async () => {
   // } catch (e) {
   //   console.log(e)
   // }
-
+  // return
   // Voucher References
   // https://github.com/Zondax/filecoin-signing-tools/blob/4048cc6ccc7b3d37964d0d582f95c63bc5a5f637/signer-npm/src/lib.rs
   // https://github.com/Zondax/filecoin-signing-tools/blob/dev/signer/src/lib.rs
@@ -171,14 +175,16 @@ const main = async () => {
   /* Create Voucher */
 
   console.log('##### CREATE VOUCHER #####')
-  const payment_channel_address = 't07361'
+  const payment_channel_address = 't07562'
   const time_lock_min = '0'
   const time_lock_max = '0'
   const secret = Buffer.from('secret')
-  const secret_pre_image = blake2b(new Uint8Array(32).length).update(secret).digest('hex') // preimage
-    
-    // console.log(typeof secret_pre_image)
-    // return
+  const secret_pre_image = blake2b(new Uint8Array(32).length)
+    .update(secret)
+    .digest('hex') // preimage
+
+  // console.log(typeof secret_pre_image)
+  // return
   const amount = '100000'
   const lane = '0'
   const nonce_voucher = 0
@@ -219,14 +225,61 @@ const main = async () => {
     signedVoucher,
     secret,
     redeem_nonce,
-    '0', // gas_limit
-    '0', // gas_fee_cap,
-    '0', // gas_premium
+    '20000000000', // gas_limit
+    '20000000000', // gas_fee_cap,
+    '124964', // gas_premium
   )
 
-  console.log(update_paych_message)
+  // console.log(update_paych_message)
   update_paych_message = await filRPC.getGasEstimation(update_paych_message)
+  update_paych_message = update_paych_message.result
   console.log(update_paych_message)
+
+  console.log('##### SIGN MESSAGE #####')
+  const update_paych_message_signed = JSON.parse(
+    filecoin_signer.transactionSignLotus(
+      update_paych_message,
+      privateKeyBase64_2,
+    ),
+  )
+  console.log(update_paych_message_signed)
+
+  // Read Payment Channel State
+  console.log('##### READ PAYMENT CHANNEL STATE #####')
+
+  const pay_cha_state_response = await axios.post(
+    URL,
+    {
+      jsonrpc: '2.0',
+      method: 'Filecoin.StateReadState',
+      id: 1,
+      params: [payment_channel_address, null],
+    },
+    { Authorization: `Bearer ${TOKEN}` },
+  )
+
+  console.log(pay_cha_state_response.data)
+
+  console.log("##### SEND PAYMENT CHANNEL UPDATE #####")
+  
+  const update_response = await filRPC.sendSignedMessage(update_paych_message_signed)
+  console.log(update_response)
+
+  // Read Payment Channel State
+  console.log('##### READ PAYMENT CHANNEL STATE #####')
+
+  const pay_cha_state_response_2 = await axios.post(
+    URL,
+    {
+      jsonrpc: '2.0',
+      method: 'Filecoin.StateReadState',
+      id: 1,
+      params: [payment_channel_address, null],
+    },
+    { Authorization: `Bearer ${TOKEN}` },
+  )
+
+  console.log(pay_cha_state_response_2.data)
 }
 
 main()
